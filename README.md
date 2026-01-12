@@ -1,11 +1,18 @@
-<div align="center">
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+# KPI Guard MVP
 
-  <h1>Built with AI Studio</h2>
+## Project Structure
+- `index.html`: Entry HTML with Tailwind CSS.
+- `index.tsx`: Main React entry point.
+- `App.tsx`: Primary application logic and state management.
+- `types.ts`: TypeScript interfaces for KPI data and analysis results.
+- `services/geminiService.ts`: Integration with Gemini API for marketing analysis.
+- `components/`: Modular UI components (Header, MetricCard, InputSection, AnalysisView).
 
-  <p>The fastest path from prompt to production with Gemini.</p>
-
-  <a href="https://aistudio.google.com/apps">Start building</a>
-
-</div>
+## How to run locally
+1. Ensure you have Node.js installed.
+2. Create a new directory and initialize a React project or use a sandbox.
+3. Install dependencies: `npm install @google/genai lucide-react clsx tailwind-merge`.
+4. Add your Gemini API Key to your environment variables as `API_KEY`.
+5. Start the development server: `npm start`.
+6. Open your browser to the local server address.
