@@ -15,7 +15,8 @@ import {
   TrendingDown,
   ChevronRight,
   CheckCircle2,
-  XCircle
+  XCircle,
+  RotateCcw
 } from 'lucide-react';
 import { KpiInputs, KpiMetrics, CurrencyCode, AuditResult } from './types';
 
@@ -141,13 +142,14 @@ export default function App() {
     return { cpl, cpa, revenue, roi, cr, beCpa, beCpl };
   }, [inputs]);
 
-  const fillDemo = () => {
+  const resetData = () => {
     setInputs({ 
-      budget: currency === 'KZT' ? 300000 : 1000, 
-      leads: 120, 
-      sales: 12, 
-      avgCheck: currency === 'KZT' ? 45000 : 150 
+      budget: 0, 
+      leads: 0, 
+      sales: 0, 
+      avgCheck: 0 
     });
+    setAudit(null);
   };
 
   const generateAudit = () => {
@@ -287,11 +289,11 @@ export default function App() {
               ))}
             </div>
             <button 
-              onClick={fillDemo}
-              className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 rounded-xl text-xs font-bold hover:bg-slate-200 active:scale-95 transition-all"
+              onClick={resetData}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-700 active:scale-95 transition-all"
             >
-              <RefreshCw size={14} />
-              Демо-данные
+              <RotateCcw size={14} />
+              Сбросить данные
             </button>
           </div>
         </div>
