@@ -21,9 +21,16 @@ export interface KpiMetrics {
 export interface AuditResult {
   risk: 'Низкий' | 'Средний' | 'Высокий';
   insights: string[];
-  priorityActions: { title: string; action: string; why: string }[];
+  priorityActions: { 
+    title: string; 
+    action: string; 
+    why: string;
+    ifNotDone?: string;
+    controlKpi?: string;
+  }[];
   lossPoints: { label: string; diff: string; lossValue: number; isCritical: boolean }[];
   scenarios: { title: string; profit: number; roi: number; comment: string }[];
+  alternativePlan?: string;
   scores: {
     total: number;
     economy: number;
