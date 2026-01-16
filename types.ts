@@ -40,3 +40,20 @@ export interface AuditResult {
     interpretation: string;
   };
 }
+
+export interface AnalyticsSummary {
+  stats: {
+    today: number;
+    last7Days: number;
+    last30Days: number;
+    uniqueVisitors: number;
+  };
+  topEvents: { event_name: string; count: number }[];
+  topPages: { path: string; count: number }[];
+  conversion: {
+    pageViews: number;
+    analyzeClicks: number;
+    rate: number;
+  };
+  recentEvents: any[];
+}
