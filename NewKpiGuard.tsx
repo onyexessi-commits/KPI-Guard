@@ -1,7 +1,7 @@
 
 import { 
   TrendingUp, Users, Target, DollarSign, ShieldCheck, LayoutDashboard, Wallet, 
-  CheckCircle2, RotateCcw, Check, Zap, XCircle, ChevronRight, ArrowUpRight,
+  CheckCircle2, RotateCcw, Check, Zap, XCircle, ArrowUpRight,
   RefreshCw, Copy, Download, AlertCircle, TrendingDown, Info
 } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
@@ -49,10 +49,10 @@ const MetricCard: React.FC<{
         </div>
         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-tight">{label}</span>
       </div>
-      {status && <Badge type={status}>{status === 'good' ? 'ХОРОШО' : status === 'bad' ? 'УБЫТОК' : 'НОРМА'}</Badge>}
+      {status && <Badge type={status}>{status === 'good' ? 'НОРМА' : status === 'bad' ? 'РИСК' : 'ВНИМАНИЕ'}</Badge>}
     </div>
-    <div className="flex items-baseline gap-1.5 overflow-hidden">
-      <span className="text-3xl font-black text-white tracking-tight truncate">
+    <div className="flex items-baseline gap-2 overflow-hidden whitespace-nowrap leading-none tracking-tight">
+      <span className="text-3xl font-extrabold text-white truncate">
         {typeof value === 'number' ? value.toLocaleString() : value}
       </span>
       <span className="text-sm font-semibold text-slate-500 whitespace-nowrap">{isPercent ? '%' : currencySymbol}</span>
@@ -136,44 +136,38 @@ export default function NewKpiGuard() {
     const dateStr = new Date().toLocaleString('ru-RU');
     const text = `
 --------------------------------------------------
-📋 KPI GUARD: ПРОФЕССИОНАЛЬНЫЙ АУДИТ МАРКЕТИНГА
+📋 KPI GUARD: АУДИТ МАРКЕТИНГОВОЙ ЭФФЕКТИВНОСТИ
 --------------------------------------------------
 Дата: ${dateStr}
 Валюта: ${currency}
 
-1. ВХОДНЫЕ ДАННЫЕ:
-   - Бюджет: ${Math.round(inputs.budget).toLocaleString()} ${currencySymbol}
-   - Лиды: ${inputs.leads.toLocaleString()}
-   - Продажи: ${inputs.sales.toLocaleString()}
-   - Ср. чек: ${Math.round(inputs.avgCheck).toLocaleString()} ${currencySymbol}
+ДИСКЛЕЙМЕР: Все расчёты выполнены без учёта себестоимости и операционных расходов. 
+Показатели отражают эффективность маркетинга, а не прибыль бизнеса.
 
-2. КЛЮЧЕВЫЕ KPI:
-   - ROI (Текущий): ${metrics.roi.toFixed(1)}%
-   - Выручка: ${Math.round(metrics.revenue).toLocaleString()} ${currencySymbol}
-   - Прибыль: ${Math.round(metrics.profit).toLocaleString()} ${currencySymbol}
+1. ФАКТИЧЕСКИЕ ПОКАЗАТЕЛИ (GROSS):
+   - Рекл. Бюджет: ${Math.round(inputs.budget).toLocaleString()} ${currencySymbol}
+   - Выручка (Gross): ${Math.round(metrics.revenue).toLocaleString()} ${currencySymbol}
+   - Маркетинговый вклад: ${Math.round(metrics.profit).toLocaleString()} ${currencySymbol}
+
+2. МАРКЕТИНГОВЫЕ KPI:
+   - ROI (Gross): ${metrics.roi.toFixed(1)}%
    - Конверсия (CR): ${metrics.cr.toFixed(1)}%
-   - CPL: ${Math.round(metrics.cpl).toLocaleString()} (BE: ${Math.round(metrics.beCpl)})
-   - CPA: ${Math.round(metrics.cpa).toLocaleString()} (BE: ${Math.round(metrics.beCpa)})
+   - CPL (Факт): ${Math.round(metrics.cpl).toLocaleString()}
+   - BE CPL (Marketing BE): ${Math.round(metrics.beCpl).toLocaleString()}
 
-3. ДИАГНОСТИКА:
-   ${audit.lossPoints.length > 0 ? audit.lossPoints.map(p => `❌ ${p.label}: ${p.diff} (Потеря: ${p.lossValue.toLocaleString()} ${currencySymbol})`).join('\n   ') : '✅ Критических потерь не обнаружено'}
+3. ВЕРДИКТ [ ${audit.scores.total}/8.5 ]:
+   ${audit.scores.interpretation}
 
-4. ИТОГОВЫЙ ВЕРДИКТ:
-   [ ${audit.scores.total}/10 ] — ${audit.scores.interpretation}
+4. ${metrics.profit <= 0 ? 'ПЛАН ВОССТАНОВЛЕНИЯ' : 'ГИПОТЕЗЫ РОСТА'} (WHAT-IF):
+   - ${audit.scenarios[0].title}: Вклад ${audit.scenarios[0].profit.toLocaleString()} (${audit.scenarios[0].badgeLabel})
+   - ${audit.scenarios[1].title}: Вклад ${audit.scenarios[1].profit.toLocaleString()} (${audit.scenarios[1].badgeLabel})
+   - ${audit.scenarios[2].title}: Вклад ${audit.scenarios[2].profit.toLocaleString()} (${audit.scenarios[2].badgeLabel})
 
-5. WHAT-IF (СЦЕНАРИИ РОСТА):
-   - ${audit.scenarios[0].title}: Прибыль +${audit.scenarios[0].profit.toLocaleString()}, ROI ${audit.scenarios[0].roi}% (${audit.scenarios[0].badgeLabel})
-   - ${audit.scenarios[1].title}: Прибыль +${audit.scenarios[1].profit.toLocaleString()}, ROI ${audit.scenarios[1].roi}% (${audit.scenarios[1].badgeLabel})
-   - ${audit.scenarios[2].title}: Прибыль +${audit.scenarios[2].profit.toLocaleString()}, ROI ${audit.scenarios[2].roi}% (${audit.scenarios[2].badgeLabel})
-
-6. ПРИОРИТЕТНЫЕ ДЕЙСТВИЯ:
-   - ${audit.priorityActions[0].title}: ${audit.priorityActions[0].action}
-   - ${audit.priorityActions[1].title}: ${audit.priorityActions[1].action}
 --------------------------------------------------
-Отчет сформирован автоматически в KPI Guard MVP.
+Отчет сформирован автоматически в KPI Guard Professional.
     `.trim();
     navigator.clipboard.writeText(text);
-    showToast('Текст отчета скопирован');
+    showToast('Отчет скопирован');
   };
 
   const downloadHtml = () => {
@@ -184,116 +178,43 @@ export default function NewKpiGuard() {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>KPI Guard — Отчет Аудита</title>
+    <title>KPI Guard — Marketing Audit Report</title>
     <style>
         :root { --bg: #0b0f19; --card: #161e2e; --accent: #6366f1; --text: #f8fafc; --muted: #94a3b8; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 40px; margin: 0; line-height: 1.5; }
         .report { max-width: 900px; margin: 0 auto; }
+        .disclaimer { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 15px; border-radius: 12px; font-size: 11px; margin-bottom: 30px; text-transform: uppercase; font-weight: 800; }
         .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #334155; padding-bottom: 20px; margin-bottom: 40px; }
         .logo { font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); }
-        .meta { text-align: right; font-size: 12px; color: var(--muted); text-transform: uppercase; }
-        
         .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
         .summary-card { background: var(--card); padding: 24px; border-radius: 20px; border: 1px solid #334155; }
-        .summary-card.accent { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
         .summary-card .label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
         .summary-card .value { font-size: 24px; font-weight: 900; }
-        
-        .section { margin-bottom: 50px; }
         .section-title { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 24px; }
-        
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--muted); padding: 12px; border-bottom: 1px solid #1e293b; }
-        td { padding: 16px 12px; border-bottom: 1px solid #1e293b; font-size: 14px; font-weight: 600; }
-        
         .verdict { background: var(--card); padding: 30px; border-radius: 24px; border: 1px solid #334155; display: flex; align-items: center; gap: 30px; }
         .score-circle { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--accent); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; }
         .score-circle span { font-size: 32px; line-height: 1; }
-        .score-circle small { font-size: 10px; color: var(--muted); }
-        
-        .what-if-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .scenario-card { background: #0b0f19; padding: 20px; border-radius: 16px; border: 1px solid #334155; }
-        
-        .actions { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .action-item { background: var(--card); padding: 20px; border-radius: 16px; border-left: 4px solid var(--accent); }
-        
-        .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #1e293b; font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; }
-        
-        @media print {
-            body { background: white; color: black; padding: 20px; }
-            .summary-card, .scenario-card, .action-item, .verdict { border: 1px solid #ddd; background: #fff !important; }
-            .logo, .section-title { color: #000; }
-            .accent { color: #6366f1 !important; }
-        }
+        .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #1e293b; font-size: 10px; color: var(--muted); text-align: center; }
     </style>
 </head>
 <body>
     <div class="report">
-        <div class="header">
-            <div class="logo">KPI Guard Analysis</div>
-            <div class="meta">Дата: ${dateStr}<br>Валюта: ${currency}</div>
-        </div>
-
+        <div class="disclaimer">Все расчёты отражают маркетинговую эффективность (Gross). Не учитывается себестоимость продукции, налоги и операционные расходы.</div>
+        <div class="header"><div class="logo">KPI Guard Marketing Analysis</div><div class="meta">Дата: ${dateStr}<br>Валюта: ${currency}</div></div>
         <div class="verdict">
-            <div class="score-circle"><span>${audit.scores.total}</span><small>/10</small></div>
-            <div>
-                <div style="font-size: 12px; text-transform: uppercase; font-weight: 800; color: var(--muted); margin-bottom: 4px;">Executive Verdict</div>
-                <div style="font-size: 20px; font-weight: 800;">${audit.scores.interpretation}</div>
-            </div>
+            <div class="score-circle"><span>${audit.scores.total}</span><small>/8.5</small></div>
+            <div><div style="font-size: 12px; text-transform: uppercase; font-weight: 800; color: var(--muted); margin-bottom: 4px;">Efficiency Verdict</div><div style="font-size: 20px; font-weight: 800;">${audit.scores.interpretation}</div></div>
         </div>
-
         <div class="section" style="margin-top: 40px;">
-            <div class="section-title">Core Performance Metrics</div>
+            <div class="section-title">Marketing Performance (Gross)</div>
             <div class="summary-grid">
-                <div class="summary-card accent"><div class="label">ROI</div><div class="value">${metrics.roi.toFixed(1)}%</div></div>
-                <div class="summary-card"><div class="label">Net Profit</div><div class="value">${Math.round(metrics.profit).toLocaleString()} ${currencySymbol}</div></div>
+                <div class="summary-card"><div class="label">ROI (Gross)</div><div class="value">${metrics.roi.toFixed(1)}%</div></div>
+                <div class="summary-card"><div class="label">Contribution</div><div class="value">${Math.round(metrics.profit).toLocaleString()} ${currencySymbol}</div></div>
                 <div class="summary-card"><div class="label">Revenue</div><div class="value">${Math.round(metrics.revenue).toLocaleString()} ${currencySymbol}</div></div>
                 <div class="summary-card"><div class="label">Conversion</div><div class="value">${metrics.cr.toFixed(1)}%</div></div>
             </div>
         </div>
-
-        <div class="section">
-            <div class="section-title">Break-even Analysis</div>
-            <table>
-                <thead><tr><th>Metric</th><th>Current</th><th>Break-even (BE)</th><th>Status</th></tr></thead>
-                <tbody>
-                    <tr><td>Cost per Lead (CPL)</td><td>${Math.round(metrics.cpl).toLocaleString()} ${currencySymbol}</td><td>${Math.round(metrics.beCpl).toLocaleString()} ${currencySymbol}</td><td>${metrics.cpl > metrics.beCpl ? '⚠️ Warning' : '✅ Healthy'}</td></tr>
-                    <tr><td>Cost per Acquisition (CPA)</td><td>${Math.round(metrics.cpa).toLocaleString()} ${currencySymbol}</td><td>${Math.round(metrics.beCpa).toLocaleString()} ${currencySymbol}</td><td>${metrics.cpa > metrics.beCpa ? '❌ Loss' : '✅ Healthy'}</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="section">
-            <div class="section-title">What-if Scenarios</div>
-            <div class="what-if-grid">
-                ${audit.scenarios.map(s => `
-                    <div class="scenario-card">
-                        <div class="label">${s.title}</div>
-                        <div style="font-size: 9px; margin-bottom: 4px; font-weight: bold; color: ${s.badgeType === 'bad' ? '#f43f5e' : s.badgeType === 'good' ? '#10b981' : '#f59e0b'}">${s.badgeLabel}</div>
-                        <div class="value" style="font-size: 18px; margin: 4px 0;">+${s.profit.toLocaleString()} ${currencySymbol}</div>
-                        <div style="font-size: 11px; color: var(--muted);">${s.comment}</div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Actionable Roadmap</div>
-            <div class="actions">
-                ${audit.priorityActions.map((a, i) => `
-                    <div class="action-item">
-                        <div style="font-size: 10px; font-weight: 800; color: var(--accent); margin-bottom: 4px;">PRIORITY ${i+1}</div>
-                        <div style="font-size: 16px; font-weight: 800; margin-bottom: 8px;">${a.title}: ${a.action}</div>
-                        <div style="font-size: 12px; color: var(--muted);">Primary KPI: <strong>${a.controlKpi}</strong></div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-
-        <div class="footer">
-            <div>Math: Profit = Revenue - Budget | ROI = (Profit/Budget)*100% | BE CPA = AvgCheck</div>
-            <div>KPI Guard Professional MVP &copy; 2025</div>
-        </div>
+        <div class="footer">Professional Marketing Audit &copy; 2025 KPI Guard.</div>
     </div>
 </body>
 </html>
@@ -302,7 +223,7 @@ export default function NewKpiGuard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `kpi-report-${currency}-${Date.now()}.html`;
+    a.download = `marketing-audit-report.html`;
     a.click();
     showToast('HTML отчет сохранен');
   };
@@ -310,11 +231,11 @@ export default function NewKpiGuard() {
   const getStatus = (type: 'CPL' | 'CPA' | 'ROI') => {
     if (type === 'CPL') {
       if (inputs.leads === 0) return undefined;
-      return metrics.cpl <= metrics.beCpl ? 'good' : metrics.cpl <= metrics.beCpl * 1.2 ? 'neutral' : 'bad';
+      return metrics.cpl <= metrics.beCpl ? 'good' : metrics.cpl <= metrics.beCpl * 1.15 ? 'neutral' : 'bad';
     }
     if (type === 'CPA') {
       if (inputs.sales === 0) return undefined;
-      return metrics.cpa <= metrics.beCpa ? 'good' : metrics.cpa <= metrics.beCpa * 1.2 ? 'neutral' : 'bad';
+      return metrics.cpa <= metrics.beCpa ? 'good' : metrics.cpa <= metrics.beCpa * 1.15 ? 'neutral' : 'bad';
     }
     if (type === 'ROI') {
       if (inputs.budget === 0) return undefined;
@@ -338,7 +259,7 @@ export default function NewKpiGuard() {
             <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 p-2.5 rounded-2xl text-white shadow-xl shadow-indigo-500/20"><ShieldCheck size={24} strokeWidth={2.5} /></div>
             <div>
               <span className="text-xl font-black tracking-tighter text-white uppercase block leading-none">KPI Guard</span>
-              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1 block">Professional Edition</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1 block">Marketing Analysis</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -353,6 +274,13 @@ export default function NewKpiGuard() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-6 pt-12">
+        <div className="mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center gap-4 animate-in">
+          <AlertCircle className="text-amber-500 flex-shrink-0" size={20} />
+          <p className="text-[10px] font-bold text-amber-500/80 uppercase tracking-widest leading-relaxed">
+            Внимание: расчеты отражают маркетинговый вклад (Gross). Себестоимость (COGS) и налоги не учитываются.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <aside className="lg:col-span-3 space-y-8">
             <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-slate-800/60 shadow-2xl relative overflow-hidden">
@@ -369,8 +297,8 @@ export default function NewKpiGuard() {
               <div className="space-y-7">
                 {[ 
                   { l: 'Бюджет', v: inputs.budget, c: 'text-slate-300', p: 100, bc: 'bg-slate-700' },
-                  { l: 'Выручка', v: metrics.revenue, c: 'text-indigo-400', p: Math.min(100, (metrics.revenue / (inputs.budget || 1)) * 50), bc: 'bg-indigo-500' },
-                  { l: 'Прибыль', v: metrics.profit, c: metrics.profit >= 0 ? 'text-emerald-400' : 'text-rose-400', p: Math.min(100, (Math.abs(metrics.profit) / (inputs.budget || 1)) * 50), bc: metrics.profit >= 0 ? 'bg-emerald-500' : 'bg-rose-500' }
+                  { l: 'Выручка (gross)', v: metrics.revenue, c: 'text-indigo-400', p: Math.min(100, (metrics.revenue / (inputs.budget || 1)) * 50), bc: 'bg-indigo-500' },
+                  { l: 'Вклад (gross)', v: metrics.profit, c: metrics.profit >= 0 ? 'text-emerald-400' : 'text-rose-400', p: Math.min(100, (Math.abs(metrics.profit) / (inputs.budget || 1)) * 50), bc: metrics.profit >= 0 ? 'bg-emerald-500' : 'bg-rose-500' }
                 ].map((item, i) => (
                   <div key={i} className="space-y-2.5">
                     <div className="flex justify-between text-[11px] font-black text-slate-500 uppercase"><span>{item.l}</span><span className={item.c}>{Math.round(item.v).toLocaleString()} {currencySymbol}</span></div>
@@ -385,9 +313,9 @@ export default function NewKpiGuard() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               <MetricCard label="CPL (Цена лида)" value={Math.round(metrics.cpl).toLocaleString()} currencySymbol={currencySymbol} icon={<Users />} status={getStatus('CPL')} />
               <MetricCard label="CPA (Цена продажи)" value={Math.round(metrics.cpa).toLocaleString()} currencySymbol={currencySymbol} icon={<Target />} status={getStatus('CPA')} />
-              <MetricCard label="ROI (Чистый)" value={metrics.roi.toFixed(1)} isPercent icon={<TrendingUp />} status={getStatus('ROI')} />
-              <MetricCard label="Предел CPL (BE)" value={Math.round(metrics.beCpl).toLocaleString()} currencySymbol={currencySymbol} icon={<TrendingDown />} />
-              <MetricCard label="Предел CPA (BE)" value={Math.round(metrics.beCpa).toLocaleString()} currencySymbol={currencySymbol} icon={<DollarSign />} />
+              <MetricCard label="ROI (Gross)" value={metrics.roi.toFixed(1)} isPercent icon={<TrendingUp />} status={getStatus('ROI')} />
+              <MetricCard label="Маркетинг BE (CPL)" value={Math.round(metrics.beCpl).toLocaleString()} currencySymbol={currencySymbol} icon={<TrendingDown />} />
+              <MetricCard label="Маркетинг BE (CPA)" value={Math.round(metrics.beCpa).toLocaleString()} currencySymbol={currencySymbol} icon={<DollarSign />} />
               <MetricCard label="CR (Конверсия)" value={metrics.cr.toFixed(1)} isPercent icon={<Zap />} />
             </div>
 
@@ -395,14 +323,14 @@ export default function NewKpiGuard() {
               <div className="px-10 py-8 border-b border-slate-800/60 flex items-center justify-between bg-slate-900/20 flex-wrap gap-4">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 shadow-lg shadow-indigo-500/5"><ShieldCheck size={22} /></div>
-                  <div><h3 className="text-sm font-black text-white uppercase tracking-widest leading-none">Профессиональный аудит</h3><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1.5 block opacity-60">Детальный анализ Unit-экономики</span></div>
+                  <div><h3 className="text-sm font-black text-white uppercase tracking-widest leading-none">Marketing Efficiency Audit</h3><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1.5 block opacity-60">Анализ маркетингового вклада (Gross)</span></div>
                 </div>
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-3">
                   {audit && (
-                    <div className="flex gap-2">
-                      <button onClick={copyReport} className="px-6 py-2.5 bg-slate-800/40 text-slate-400 border border-slate-700/50 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 hover:text-white transition-all flex items-center gap-2 whitespace-nowrap active:scale-95"><Copy size={14} /> СКОПИРОВАТЬ</button>
-                      <button onClick={downloadHtml} className="px-6 py-2.5 bg-indigo-500/10 text-indigo-400 border-2 border-indigo-500/80 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500/20 transition-all flex items-center gap-2 whitespace-nowrap shadow-[0_0_15px_rgba(99,102,241,0.2)] active:scale-95"><Download size={14} /> СКАЧАТЬ HTML</button>
-                    </div>
+                    <>
+                      <button onClick={copyReport} className="p-3.5 bg-slate-800/40 text-slate-400 border border-slate-700/50 rounded-2xl hover:text-white transition-all active:scale-95" title="Скопировать отчет"><Copy size={18} /></button>
+                      <button onClick={downloadHtml} className="p-3.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 rounded-2xl hover:bg-indigo-500/20 transition-all active:scale-95" title="Скачать HTML"><Download size={18} /></button>
+                    </>
                   )}
                   <button onClick={handleAnalyze} disabled={isGenerating || !canAnalyze} className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[11px] font-black disabled:opacity-20 hover:bg-indigo-500 transition-all duration-300 flex items-center gap-3 shadow-2xl shadow-indigo-500/30 active:scale-95 group">
                     {isGenerating ? <RefreshCw size={18} className="animate-spin" /> : <Zap size={18} className="group-hover:scale-125 transition-transform" fill="currentColor" />}
@@ -415,16 +343,16 @@ export default function NewKpiGuard() {
                 <div className="p-10 space-y-16 animate-in">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="bg-indigo-500/5 p-10 rounded-[2.5rem] border border-indigo-500/10 flex flex-col items-center justify-center text-center group transition-all hover:bg-indigo-500/10 shadow-inner">
-                      <span className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4 opacity-60">Общая оценка</span>
-                      <div className="text-7xl font-black text-indigo-400 leading-none drop-shadow-2xl">{audit.scores.total}</div>
-                      <span className="text-[11px] font-bold text-indigo-300/40 mt-5 uppercase tracking-[0.4em]">из 10</span>
+                      <span className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4 opacity-60">Efficiency Score</span>
+                      <div className="text-7xl font-extrabold text-indigo-400 leading-none drop-shadow-2xl tracking-tighter">{audit.scores.total}</div>
+                      <span className="text-[11px] font-bold text-indigo-300/40 mt-5 uppercase tracking-[0.4em]">из 8.5</span>
                     </div>
                     <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-6">
                        {[ {l: 'Экономика', v: audit.scores.economy, bc: 'bg-indigo-500' }, {l: 'Воронка', v: audit.scores.funnel, bc: 'bg-emerald-500' }, {l: 'Масштаб', v: audit.scores.scale, bc: 'bg-indigo-400' } ].map((s, i) => (
                          <div key={i} className="p-7 bg-slate-900/60 rounded-[2rem] border border-slate-800/60 flex flex-col justify-between hover:border-slate-700/80 transition-all">
                             <span className="text-[10px] font-black uppercase text-slate-500 mb-2 opacity-50 tracking-widest">{s.l}</span>
-                            <span className="text-3xl font-black text-white tracking-tight">{s.v}/10</span>
-                            <div className="h-1.5 w-full bg-slate-800 rounded-full mt-4 overflow-hidden"><div className={`h-full ${s.bc} rounded-full`} style={{ width: `${s.v * 10}%` }}></div></div>
+                            <span className="text-3xl font-extrabold text-white tracking-tight leading-none">{s.v}/8.5</span>
+                            <div className="h-1.5 w-full bg-slate-800 rounded-full mt-4 overflow-hidden"><div className={`h-full ${s.bc} rounded-full`} style={{ width: `${(s.v / 8.5) * 100}%` }}></div></div>
                          </div>
                        ))}
                        <div className="col-span-1 sm:col-span-3 flex items-center gap-4 bg-indigo-500/5 p-6 rounded-2xl border border-indigo-500/10"><AlertCircle size={20} className="text-indigo-400 flex-shrink-0" /><p className="text-sm font-semibold text-slate-300 leading-relaxed italic">«{audit.scores.interpretation}»</p></div>
@@ -438,30 +366,30 @@ export default function NewKpiGuard() {
                           <div className="space-y-4">
                              {audit.lossPoints.length > 0 ? audit.lossPoints.map((lp, i) => (
                                <div key={i} className="p-5.5 bg-slate-900/60 border border-slate-800/60 rounded-3xl flex items-center justify-between group hover:border-rose-500/20 transition-all">
-                                  <div className="space-y-1"><div className="text-xs font-black text-slate-200 uppercase tracking-tight">{lp.label}</div><div className="text-[11px] text-rose-500 font-bold uppercase tracking-widest opacity-80">Ущерб: -{lp.lossValue.toLocaleString()} {currencySymbol}</div></div>
+                                  <div className="space-y-1"><div className="text-xs font-black text-slate-200 uppercase tracking-tight">{lp.label}</div><div className="text-[11px] text-rose-500 font-bold uppercase tracking-widest opacity-80">Риск: -{lp.lossValue.toLocaleString()} {currencySymbol}</div></div>
                                   <Badge type={lp.isCritical ? 'bad' : 'neutral'}>{lp.diff}</Badge>
                                </div>
                              )) : <div className="p-7 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl flex items-center gap-5"><div className="p-2.5 bg-emerald-500/15 rounded-2xl text-emerald-400"><CheckCircle2 size={22} /></div><div><span className="text-xs font-black text-emerald-400 uppercase tracking-widest block">Аномальных потерь не найдено</span></div></div>}
                           </div>
                        </div>
                        <div className="space-y-7">
-                          <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.25em] flex items-center gap-2"><Info size={14} /> Выводы маркетолога</h4>
+                          <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.25em] flex items-center gap-2"><Info size={14} /> Аналитический вывод</h4>
                           <ul className="space-y-6">{audit.insights.map((ins, i) => (<li key={i} className="flex gap-5 items-start text-slate-300 group"><div className="mt-2 w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0 shadow-[0_0_12px_rgba(99,102,241,0.6)]"></div><span className="text-[13px] leading-relaxed font-medium">{ins}</span></li>))}</ul>
                        </div>
                     </div>
 
                     <div className="space-y-12">
-                       <div className="bg-emerald-500/[0.02] p-8 rounded-[2.5rem] border border-slate-800/60 shadow-xl">
-                          <h4 className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.25em] mb-8 flex items-center gap-3.5"><ArrowUpRight size={18} /> Сценарии роста (What-if)</h4>
+                       <div className="bg-indigo-500/[0.02] p-8 rounded-[2.5rem] border border-slate-800/60 shadow-xl">
+                          <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.25em] mb-8 flex items-center gap-3.5"><ArrowUpRight size={18} /> {metrics.profit <= 0 ? 'План восстановления экономики' : 'Гипотезы роста (What-if)'}</h4>
                           <div className="space-y-5">
                              {audit.scenarios.map((sc, i) => (
-                               <div key={i} className="p-6 bg-[#0b0f19]/70 border border-slate-800/80 rounded-[1.75rem] group hover:border-emerald-500/30 transition-all cursor-default shadow-inner">
+                               <div key={i} className="p-6 bg-[#0b0f19]/70 border border-slate-800/80 rounded-[1.75rem] group hover:border-indigo-500/30 transition-all cursor-default shadow-inner">
                                   <div className="flex justify-between items-center mb-4">
                                     <span className="text-[11px] font-black text-white uppercase tracking-tight">{sc.title}</span>
                                     <Badge type={sc.badgeType}>{sc.badgeLabel}</Badge>
                                   </div>
                                   <div className="mb-4">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Ожидаемая прибыль</span>
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Ожидаемый вклад (gross)</span>
                                     <div className="whitespace-nowrap inline-flex items-baseline gap-2 leading-none tracking-tight text-white font-extrabold text-[clamp(28px,6vw,44px)]">
                                       {sc.profit.toLocaleString()}
                                       <span className="text-[clamp(18px,3.5vw,28px)] font-bold text-slate-500 whitespace-nowrap">{currencySymbol}</span>
@@ -469,21 +397,9 @@ export default function NewKpiGuard() {
                                   </div>
                                   <p className="text-sm font-medium text-slate-500 italic leading-relaxed">«{sc.comment}»</p>
                                   <div className="mt-3 pt-3 border-t border-slate-800/40 flex justify-between items-center">
-                                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">Ожидаемый ROI</span>
+                                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">ROI (Gross)</span>
                                     <span className={`text-xs font-black ${sc.roi >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{sc.roi}%</span>
                                   </div>
-                               </div>
-                             ))}
-                          </div>
-                       </div>
-                       <div className="space-y-7">
-                          <h4 className="text-[11px] font-black text-amber-400 uppercase tracking-[0.25em] flex items-center gap-2"><Target size={14} /> Что сделать в первую очередь</h4>
-                          <div className="space-y-6">
-                             {audit.priorityActions.map((item, i) => (
-                               <div key={i} className="p-8 bg-[#0b0f19] border border-slate-800/80 rounded-[2rem] space-y-5 shadow-2xl group hover:border-indigo-500/20 transition-all">
-                                  <div className="flex justify-between items-center"><h5 className="text-[11px] font-black text-white uppercase tracking-widest">{item.title}</h5><Badge type="neutral">{item.controlKpi}</Badge></div>
-                                  <p className="text-sm font-black text-slate-200 leading-relaxed">{item.action}</p>
-                                  <div className="pl-5 border-l-2 border-indigo-500/30 space-y-3"><p className="text-[11px] text-slate-400 leading-relaxed"><span className="text-indigo-400 font-black uppercase text-[9px] mr-2 tracking-tighter">Почему сейчас:</span>{item.whyNow}</p><p className="text-[11px] text-rose-500/70 leading-relaxed italic"><span className="font-bold uppercase text-[9px] mr-2 tracking-tighter">Если не сделать:</span>{item.ifNotDone}</p></div>
                                </div>
                              ))}
                           </div>
@@ -492,13 +408,13 @@ export default function NewKpiGuard() {
                   </div>
                 </div>
               ) : (
-                <div className="py-56 flex flex-col items-center justify-center text-slate-800/40 gap-8"><div className="p-12 bg-slate-900/40 rounded-full border-2 border-slate-800/40 relative"><Target size={64} strokeWidth={1} /><div className="absolute inset-0 animate-ping bg-indigo-500/5 rounded-full pointer-events-none"></div></div><div className="text-center space-y-2"><p className="text-[11px] uppercase tracking-[0.6em] font-black">Ожидание входящих данных</p><p className="text-[9px] uppercase tracking-[0.3em] font-bold opacity-40">Нажмите кнопку анализа после заполнения полей</p></div></div>
+                <div className="py-56 flex flex-col items-center justify-center text-slate-800/40 gap-8"><div className="p-12 bg-slate-900/40 rounded-full border-2 border-slate-800/40 relative"><Target size={64} strokeWidth={1} /><div className="absolute inset-0 animate-ping bg-indigo-500/5 rounded-full pointer-events-none"></div></div><div className="text-center space-y-2"><p className="text-[11px] uppercase tracking-[0.6em] font-black">Ожидание данных</p><p className="text-[9px] uppercase tracking-[0.3em] font-bold opacity-40">Нажмите кнопку анализа после заполнения полей</p></div></div>
               )}
             </div>
           </section>
         </div>
       </main>
-      <footer className="max-w-7xl mx-auto px-6 py-20 text-center border-t border-slate-800/30 mt-20 opacity-40"><p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.6em] leading-relaxed">KPI Guard Professional &bull; Professional Audit Tool &bull; 2025</p></footer>
+      <footer className="max-w-7xl mx-auto px-6 py-20 text-center border-t border-slate-800/30 mt-20 opacity-40"><p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.6em] leading-relaxed">KPI Guard Professional &bull; Marketing Efficiency Audit &bull; 2025</p></footer>
     </div>
   );
 }

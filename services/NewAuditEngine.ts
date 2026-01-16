@@ -9,15 +9,15 @@ export function calculateMetrics(inputs: KpiInputs): KpiMetrics {
   const cpl = leads > 0 ? budget / leads : 0;
   const cpa = sales > 0 ? budget / sales : 0;
   const revenue = sales * avgCheck;
-  const profit = revenue - budget;
-  const roi = budget > 0 ? (profit / budget) * 100 : 0;
+  const marketingContribution = revenue - budget; // Маркетинговый вклад (Gross)
+  const roi = budget > 0 ? (marketingContribution / budget) * 100 : 0;
   const cr = leads > 0 ? (sales / leads) * 100 : 0;
   
-  // Simplified Break-even: Revenue per sale must cover cost per sale
-  const beCpa = avgCheck;
+  // Безубыточность СТРОГО по выручке (Marketing BE)
+  const beCpa = avgCheck; 
   const beCpl = avgCheck * (leads > 0 ? (sales / leads) : 0);
 
-  return { cpl, cpa, revenue, profit, roi, cr, beCpa, beCpl };
+  return { cpl, cpa, revenue, profit: marketingContribution, roi, cr, beCpa, beCpl };
 }
 
 export function generateAuditReport(
@@ -29,31 +29,37 @@ export function generateAuditReport(
   const { budget, leads, sales, avgCheck } = inputs;
   const { roi, cr, cpl, beCpl, cpa, beCpa, profit } = metrics;
 
-  // 1. Scores (0-10)
-  const economyScore = Math.min(10, Math.max(0, Math.round(roi / 25) + 5));
-  const funnelScore = Math.min(10, Math.max(0, Math.round(cr / 2) + 2));
-  const scaleScore = cpl < beCpl ? Math.min(10, Math.max(1, Math.round((beCpl / (cpl || 1)) * 3))) : 2;
-  const totalScore = Math.round((economyScore + funnelScore + scaleScore) / 3);
+  // Определение режима
+  const isRecoveryMode = profit <= 0 || roi <= 0;
 
-  // 2. Interpretation
-  let interpretation = "Требуется радикальная перестройка воронки и оффера.";
-  if (totalScore >= 8) interpretation = "Модель высокоэффективна. Рекомендуется агрессивное масштабирование.";
-  else if (totalScore >= 5) interpretation = "Устойчивая модель с потенциалом роста через оптимизацию конверсии.";
-  else if (totalScore >= 3) interpretation = "Кампания работает на грани окупаемости. Необходим аудит этапов продаж.";
+  // Оценки (0-10), СТРОГИЙ потолок 8.5
+  const economyBase = Math.min(8.5, Math.max(0, (roi / 45) + 3.5));
+  const funnelBase = Math.min(8.5, Math.max(0, (cr / 2) + 1.5));
+  const scaleBase = cpl < beCpl ? Math.min(8.5, Math.max(1, (beCpl / (cpl || 1)) * 2)) : 1.5;
+  
+  const totalScore = Number(Math.min(8.5, (economyBase + funnelBase + scaleBase) / 3).toFixed(1));
 
-  // 3. Loss Points
+  let interpretation = "";
+  if (isRecoveryMode) {
+    interpretation = "Маркетинговая модель нерентабельна по выручке. Требуется экстренное восстановление экономики воронки.";
+  } else {
+    if (totalScore >= 7.5) interpretation = "Высокая маркетинговая эффективность. Модель имеет запас прочности для тестирования масштабирования.";
+    else if (totalScore >= 5.5) interpretation = "Устойчивые показатели маркетинга. Рекомендуется точечная оптимизация конверсионных этапов.";
+    else interpretation = "Низкая эффективность маркетингового вклада. Рекомендуется аудит воронки перед любым ростом затрат.";
+  }
+
   const lossPoints = [];
   if (cpl > beCpl) {
     lossPoints.push({
-      label: 'Превышение BE CPL',
+      label: 'CPL выше порога выручки',
       diff: `+${(((cpl / (beCpl || 1)) - 1) * 100).toFixed(1)}%`,
       lossValue: Math.round((cpl - beCpl) * leads),
-      isCritical: cpl > beCpl * 1.3
+      isCritical: cpl > beCpl * 1.15
     });
   }
   if (cr < 2) {
     lossPoints.push({
-      label: 'Критический CR воронки',
+      label: 'Низкая конверсия (CR)',
       diff: `${cr.toFixed(1)}%`,
       lossValue: Math.round(budget * 0.5),
       isCritical: true
@@ -61,116 +67,150 @@ export function generateAuditReport(
   }
   if (cpa > beCpa) {
     lossPoints.push({
-      label: 'Отрицательная Unit-экономика',
+      label: 'CPA превышает выручку на сделку',
       diff: `-${Math.round(cpa - beCpa)}${currencySymbol}`,
       lossValue: Math.round(Math.abs(profit)),
       isCritical: true
     });
   }
 
-  // 4. Scenarios (WHAT-IF)
   const scenarios: Scenario[] = [];
 
   const getBadge = (roiVal: number, crPrime: number, crBase: number, budgetFactor: number, cplFactor: number): { type: 'good' | 'neutral' | 'bad', label: string } => {
-    const isExtreme = crPrime > 0.3 || (crPrime - crBase) > 0.1 || cplFactor < 0.8 || budgetFactor > 1.5;
-    if (isExtreme) return { type: 'bad', label: 'ЭКСТРЕМАЛЬНО' };
+    const isAggressive = crPrime > 0.30 || (crPrime - crBase) > 0.1 || cplFactor < 0.65 || budgetFactor > 1.8;
+    if (isAggressive) return { type: 'bad', label: 'АГРЕССИВНО' };
     return roiVal >= 0 ? { type: 'good', label: 'РЕАЛИСТИЧНО' } : { type: 'neutral', label: 'РИСК' };
   };
 
-  // a) +20% Budget
-  const budgetA = budget * 1.2;
-  const salesA = cpa > 0 ? (budgetA / cpa) : 0;
-  const profitA = (salesA * avgCheck) - budgetA;
-  const roiA = budgetA > 0 ? (profitA / budgetA) * 100 : 0;
-  const badgeA = getBadge(roiA, cr / 100, cr / 100, 1.2, 1);
-  scenarios.push({
-    title: '+20% Бюджет',
-    profit: Math.round(profitA),
-    roi: Number(clampRoi(roiA).toFixed(1)),
-    comment: 'Масштабирование текущей модели без потери качества трафика.',
-    badgeType: badgeA.type,
-    badgeLabel: badgeA.label
-  });
+  if (isRecoveryMode) {
+    // РЕЖИМ ВОССТАНОВЛЕНИЯ
+    // 1. Сценарий: Целевой CPL для BE
+    const targetCpl = beCpl > 0 ? beCpl : (avgCheck * 0.02);
+    const newLeadsA = budget / targetCpl;
+    const newSalesA = newLeadsA * (leads > 0 ? (sales / leads) : 0.02);
+    const newProfitA = (newSalesA * avgCheck) - budget;
+    scenarios.push({
+      title: 'Оптимизация CPL (до BE)',
+      profit: Math.round(newProfitA),
+      roi: 0,
+      comment: `Снижение стоимости лида до ${Math.round(targetCpl)}${currencySymbol} для выхода в маркетинговый ноль.`,
+      badgeType: 'good',
+      badgeLabel: 'РЕАЛИСТИЧНО'
+    });
 
-  // b) +5 p.p. Conversion
-  const crBase = leads > 0 ? (sales / leads) : 0;
-  const crB = Math.min(1, crBase + 0.05);
-  const salesB = leads * crB;
-  const profitB = (salesB * avgCheck) - budget;
-  const roiB = budget > 0 ? (profitB / budget) * 100 : 0;
-  const badgeB = getBadge(roiB, crB, crBase, 1, 1);
-  scenarios.push({
-    title: '+5% к Конверсии',
-    profit: Math.round(profitB),
-    roi: Number(clampRoi(roiB).toFixed(1)),
-    comment: 'Результат улучшения посадочной страницы или скриптов.',
-    badgeType: badgeB.type,
-    badgeLabel: badgeB.label
-  });
+    // 2. Сценарий: Целевой CR для BE
+    const targetCr = (avgCheck > 0) ? (budget / (leads * avgCheck)) : 0.05;
+    const newSalesB = leads * targetCr;
+    const newProfitB = (newSalesB * avgCheck) - budget;
+    scenarios.push({
+      title: 'Рост Конверсии (до BE)',
+      profit: Math.round(newProfitB),
+      roi: 0,
+      comment: `Повышение CR до ${(targetCr * 100).toFixed(1)}% для окупаемости текущих затрат на трафик.`,
+      badgeType: 'good',
+      badgeLabel: 'РЕАЛИСТИЧНО'
+    });
 
-  // c) -10% CPL
-  const cplC = cpl * 0.9;
-  const leadsC = cplC > 0 ? budget / cplC : 0;
-  const salesC = leadsC * (leads > 0 ? (sales / leads) : 0);
-  const profitC = (salesC * avgCheck) - budget;
-  const roiC = budget > 0 ? (profitC / budget) * 100 : 0;
-  const badgeC = getBadge(roiC, cr / 100, cr / 100, 1, 0.9);
-  scenarios.push({
-    title: '-10% Стоимость лида',
-    profit: Math.round(profitC),
-    roi: Number(clampRoi(roiC).toFixed(1)),
-    comment: 'Оптимизация рекламы и CTR объявлений.',
-    badgeType: badgeC.type,
-    badgeLabel: badgeC.label
-  });
+    // 3. Сценарий: Сокращение бюджета
+    const reducedBudget = budget * 0.6;
+    const newLeadsC = leads * 0.6;
+    const newSalesC = sales * 0.6;
+    const newProfitC = (newSalesC * avgCheck) - reducedBudget;
+    scenarios.push({
+      title: 'Сокращение бюджета (-40%)',
+      profit: Math.round(newProfitC),
+      roi: Number(clampRoi((newProfitC / (reducedBudget || 1)) * 100).toFixed(1)),
+      comment: 'Снижение операционных рисков через сокращение охвата в неэффективных каналах.',
+      badgeType: 'neutral',
+      badgeLabel: 'РИСК'
+    });
 
-  // 5. Insights
+  } else {
+    // РЕЖИМ РОСТА
+    // Гипотеза 1: +20% Бюджет
+    const budgetA = budget * 1.2;
+    const salesA = cpa > 0 ? (budgetA / cpa) : 0;
+    const profitA = (salesA * avgCheck) - budgetA;
+    const roiA = budgetA > 0 ? (profitA / budgetA) * 100 : 0;
+    const badgeA = getBadge(roiA, cr / 100, cr / 100, 1.2, 1);
+    scenarios.push({
+      title: '+20% Бюджет (Гипотеза)',
+      profit: Math.round(profitA),
+      roi: Number(clampRoi(roiA).toFixed(1)),
+      comment: 'Расчет при условии сохранения текущего CPA и качества лидов при росте масштаба.',
+      badgeType: badgeA.type,
+      badgeLabel: badgeA.label
+    });
+
+    // Гипотеза 2: +5% к CR (п.п.)
+    const crBaseVal = leads > 0 ? (sales / leads) : 0;
+    const crB = Math.min(1, crBaseVal + 0.05);
+    const salesB = leads * crB;
+    const profitB = (salesB * avgCheck) - budget;
+    const roiB = budget > 0 ? (profitB / budget) * 100 : 0;
+    const badgeB = getBadge(roiB, crB, crBaseVal, 1, 1);
+    scenarios.push({
+      title: '+5% к Конверсии (Гипотеза)',
+      profit: Math.round(profitB),
+      roi: Number(clampRoi(roiB).toFixed(1)),
+      comment: 'Гипотеза: оптимизация посадочной страницы или квалификации лидов.',
+      badgeType: badgeB.type,
+      badgeLabel: badgeB.label
+    });
+
+    // Гипотеза 3: -10% CPL
+    const cplC = cpl * 0.9;
+    const leadsC = cplC > 0 ? budget / cplC : 0;
+    const salesC = leadsC * (leads > 0 ? (sales / leads) : 0);
+    const profitC = (salesC * avgCheck) - budget;
+    const roiC = budget > 0 ? (profitC / budget) * 100 : 0;
+    const badgeC = getBadge(roiC, cr / 100, cr / 100, 1, 0.9);
+    scenarios.push({
+      title: '-10% Стоимость лида (Гипотеза)',
+      profit: Math.round(profitC),
+      roi: Number(clampRoi(roiC).toFixed(1)),
+      comment: 'Гипотеза: снижение стоимости клика или рост CTR без потери качества.',
+      badgeType: badgeC.type,
+      badgeLabel: badgeC.label
+    });
+  }
+
   const insights = [
-    `Доходность: Текущая выручка с каждой продажи — ${Math.round(avgCheck)}${currencySymbol}.`,
-    `Эффективность: Каждый вложенный ${currencySymbol} приносит ${(metrics.revenue / (budget || 1)).toFixed(2)}${currencySymbol} выручки.`,
-    `Конверсия: Текущий показатель ${cr.toFixed(1)}% ${cr < 3 ? 'ниже рыночного минимума' : 'в пределах нормы'}.`,
-    `Безубыточность: Чтобы не работать в минус, цена лида не должна превышать ${Math.round(beCpl)}${currencySymbol}.`,
-    `Запас прочности: Маржа позволяет увеличить CPA на ${Math.max(0, Math.round(beCpa - cpa))}${currencySymbol} до выхода в ноль.`,
-    `Диагноз: Основная потеря денег происходит на этапе ${cr < 4 ? 'конвертации трафика в лиды' : 'закрытия сделок'}.`
+    `Маркетинговый вклад: Текущий результат маркетинга — ${Math.round(profit).toLocaleString()}${currencySymbol} (Gross).`,
+    `ROAS/ROI (Gross): Маркетинг генерирует ${(metrics.revenue / (budget || 1)).toFixed(2)}${currencySymbol} выручки на каждый вложенный ${currencySymbol}.`,
+    `Порог BE CPL: Лид должен стоить не более ${Math.round(beCpl).toLocaleString()}${currencySymbol} для окупаемости по выручке.`,
+    `Дисклеймер: Расчеты отражают эффективность маркетинга. Себестоимость и операционные расходы НЕ учтены.`
   ];
 
-  // 6. Actions
   const priorityActions = [
     {
-      title: profit < 0 ? "КРИЗИС-МЕНЕДЖМЕНТ" : "МАСШТАБИРОВАНИЕ",
-      action: profit < 0 ? "Отключить кампании с ROI < 0 и CPA > Чека" : "Увеличить суточный лимит на 20% в прибыльных связках",
-      whyNow: "Текущая Unit-экономика не позволяет продолжать работу в прежнем режиме.",
-      ifNotDone: "Дальнейший слив бюджета приведет к кассовому разрыву.",
-      controlKpi: "ROI / CPA"
+      title: isRecoveryMode ? "ОСТАНОВКА УБЫТКОВ" : "ТЕСТ МАСШТАБА",
+      action: isRecoveryMode ? "Выявить и отключить кампании с CPA > Avg Check" : "Плановое увеличение лимитов на 10% в наиболее эффективных связках",
+      whyNow: isRecoveryMode ? "Каждый день работы в текущем режиме сжигает маркетинговый бюджет." : "Текущий ROI (Gross) позволяет расширять воронку без риска дефицита.",
+      ifNotDone: "Бизнес продолжит нести необоснованные маркетинговые расходы.",
+      controlKpi: "ROAS / CPA"
     },
     {
-      title: "ОПТИМИЗАЦИЯ КОНВЕРСИИ",
-      action: "Внедрить A/B тест первого экрана лендинга",
-      whyNow: "Рост CR на 1% даст больший эффект, чем удвоение бюджета.",
-      ifNotDone: "Стоимость привлечения клиента будет расти вместе с конкуренцией.",
-      controlKpi: "CR (Landing Page)"
-    },
-    {
-      title: "РАБОТА С ЧЕКОМ",
-      action: "Разработать Upsell-предложение для текущих лидов",
-      whyNow: "Увеличение среднего чека на 10% мгновенно выправляет ROI.",
-      ifNotDone: "Низкая маржинальность не даст возможности покупать дорогой трафик.",
-      controlKpi: "Average Order Value"
+      title: "АУДИТ ВОРОНКИ",
+      action: "Проверка качества лидов и скорости обработки заявок",
+      whyNow: "Разрыв между CPL и BE CPL указывает на неэффективность этапа конвертации трафика.",
+      ifNotDone: "Дальнейшее вливание бюджета будет умножать неэффективность воронки.",
+      controlKpi: "Sales CR"
     }
   ];
 
   return {
-    risk: profit < 0 ? 'Высокий' : roi < 50 ? 'Средний' : 'Низкий',
+    risk: profit < 0 ? 'Высокий' : roi < 40 ? 'Средний' : 'Низкий',
     insights,
     priorityActions,
     lossPoints,
     scenarios,
-    alternativePlan: "Перераспределить бюджет в пользу наиболее конверсионных площадок.",
+    alternativePlan: isRecoveryMode ? "Сфокусироваться на CRM-маркетинге и LTV для извлечения выручки из текущей базы." : "Протестировать новые источники трафика для диверсификации рисков.",
     scores: {
       total: totalScore,
-      economy: economyScore,
-      funnel: funnelScore,
-      scale: scaleScore,
+      economy: Number(economyBase.toFixed(1)),
+      funnel: Number(funnelBase.toFixed(1)),
+      scale: Number(scaleBase.toFixed(1)),
       interpretation
     }
   };
