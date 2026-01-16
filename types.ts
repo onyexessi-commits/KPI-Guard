@@ -20,13 +20,14 @@ export interface KpiMetrics {
 
 export interface AuditResult {
   risk: 'Низкий' | 'Средний' | 'Высокий';
+  riskReason?: string;
   insights: string[];
   priorityActions: { 
     title: string; 
     action: string; 
-    why: string;
-    ifNotDone?: string;
-    controlKpi?: string;
+    whyNow: string;
+    ifNotDone: string;
+    controlKpi: string;
   }[];
   lossPoints: { label: string; diff: string; lossValue: number; isCritical: boolean }[];
   scenarios: { title: string; profit: number; roi: number; comment: string }[];
