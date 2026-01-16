@@ -12,10 +12,20 @@ export interface KpiMetrics {
   cpl: number;
   cpa: number;
   revenue: number;
+  profit: number;
   roi: number;
   cr: number;
   beCpa: number;
   beCpl: number;
+}
+
+export interface Scenario {
+  title: string;
+  profit: number;
+  roi: number;
+  comment: string;
+  badgeType: 'good' | 'neutral' | 'bad';
+  badgeLabel: string;
 }
 
 export interface AuditResult {
@@ -30,8 +40,8 @@ export interface AuditResult {
     controlKpi: string;
   }[];
   lossPoints: { label: string; diff: string; lossValue: number; isCritical: boolean }[];
-  scenarios: { title: string; profit: number; roi: number; comment: string }[];
-  alternativePlan?: string;
+  scenarios: Scenario[];
+  alternativePlan: string;
   scores: {
     total: number;
     economy: number;
@@ -39,21 +49,4 @@ export interface AuditResult {
     scale: number;
     interpretation: string;
   };
-}
-
-export interface AnalyticsSummary {
-  stats: {
-    today: number;
-    last7Days: number;
-    last30Days: number;
-    uniqueVisitors: number;
-  };
-  topEvents: { event_name: string; count: number }[];
-  topPages: { path: string; count: number }[];
-  conversion: {
-    pageViews: number;
-    analyzeClicks: number;
-    rate: number;
-  };
-  recentEvents: any[];
 }
