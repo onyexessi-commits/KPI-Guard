@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   TrendingUp, Users, Target, DollarSign, ShieldCheck, 
@@ -182,7 +181,6 @@ ${audit.scenarios.map(s => `📈 ${s.title} [${s.badgeLabel}]
 
   const downloadHtml = () => {
     if (!audit) return;
-    // Logic remains same as previous high-quality export to ensure complete analysis
     const date = new Date().toLocaleString();
     const isRecovery = audit.mode === 'RECOVERY';
     const accentColor = isRecovery ? '#f43f5e' : '#10b981';
@@ -192,44 +190,385 @@ ${audit.scenarios.map(s => `📈 ${s.title} [${s.badgeLabel}]
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>KPI Guard Strategic Audit - ${audit.mode}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Guard Strategic Intelligence - ${audit.mode}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        :root {
+            --accent: ${accentColor};
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 40px; line-height: 1.6; }
-        .page { max-width: 900px; margin: 0 auto; background: #fff; border-radius: 32px; overflow: hidden; box-shadow: 0 40px 100px -20px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .header { background: #0f172a; padding: 60px; color: #fff; display: flex; justify-content: space-between; align-items: flex-end; }
-        .logo-box h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; color: #fff; }
-        .logo-box p { margin: 5px 0 0; font-size: 10px; font-weight: 700; opacity: 0.5; letter-spacing: 3px; text-transform: uppercase; }
-        .mode-badge { display: inline-block; padding: 8px 16px; border-radius: 12px; background: ${accentColor}; color: #fff; font-size: 11px; font-weight: 900; text-transform: uppercase; }
-        .content { padding: 60px; }
-        .verdict { background: #f1f5f9; border-radius: 24px; padding: 40px; margin-bottom: 50px; border-left: 10px solid ${accentColor}; }
-        .score-value { font-size: 56px; font-weight: 900; color: #0f172a; letter-spacing: -3px; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 50px; }
-        .metric { background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; }
-        .scenario-card { background: #0f172a; color: #fff; border-radius: 24px; padding: 30px; margin-bottom: 20px; }
-        .footer { padding: 40px 60px; text-align: center; background: #f8fafc; border-top: 1px solid #f1f5f9; font-size: 10px; color: #cbd5e1; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #020617; 
+            color: var(--text); 
+            margin: 0; 
+            padding: 40px 20px; 
+            line-height: 1.6;
+        }
+
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+        }
+
+        .report-card {
+            background: var(--bg);
+            border: 1px solid #334155;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.5);
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 60px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1.5px;
+        }
+
+        .logo h1 span { color: #6366f1; }
+        .logo p { 
+            margin: 5px 0 0; 
+            font-size: 10px; 
+            font-weight: 800; 
+            opacity: 0.5; 
+            letter-spacing: 4px; 
+            text-transform: uppercase; 
+        }
+
+        .mode-status {
+            padding: 12px 24px;
+            border-radius: 100px;
+            background: var(--accent)22;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            border: 1px solid var(--accent)44;
+        }
+
+        main { padding: 60px; }
+
+        .executive-summary {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 40px;
+            margin-bottom: 80px;
+            align-items: center;
+        }
+
+        .health-score {
+            background: #1e293b88;
+            border: 1px solid #334155;
+            border-radius: 32px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 12px solid #334155;
+            border-top-color: var(--accent);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(45deg);
+        }
+
+        .score-val {
+            font-size: 56px;
+            font-weight: 900;
+            color: #fff;
+            transform: rotate(-45deg);
+        }
+
+        .verdict h2 {
+            font-size: 11px;
+            font-weight: 900;
+            color: #6366f1;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .verdict p {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .risk-tag {
+            margin-top: 20px;
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            background: #334155;
+            color: #fff;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #6366f1;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #334155;
+        }
+
+        .metrics-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 80px;
+        }
+
+        .m-card {
+            background: #1e293b44;
+            border: 1px solid #334155;
+            border-radius: 24px;
+            padding: 25px;
+        }
+
+        .m-card .label {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .m-card .value {
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        .roadmap {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 80px;
+        }
+
+        .action-item {
+            background: #1e293b66;
+            border: 1px solid #334155;
+            border-radius: 24px;
+            padding: 30px;
+            position: relative;
+        }
+
+        .action-item::before {
+            content: 'STEP';
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 10px;
+            font-weight: 900;
+            color: #334155;
+        }
+
+        .action-item h3 {
+            font-size: 12px;
+            font-weight: 900;
+            color: #6366f1;
+            text-transform: uppercase;
+            margin: 0 0 10px;
+        }
+
+        .action-item .task {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .action-item .rationale {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .action-item .kpi-guard {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #334155;
+            font-size: 10px;
+            font-weight: 800;
+            color: #64748b;
+        }
+
+        .forecasts {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 80px;
+        }
+
+        .f-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 24px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .f-card:hover {
+            border-color: #6366f1;
+            transform: translateY(-5px);
+        }
+
+        .f-card .profit {
+            font-size: 22px;
+            font-weight: 900;
+            margin: 10px 0;
+        }
+
+        .f-card .roi-tag {
+            color: #6366f1;
+            font-weight: 800;
+            font-size: 12px;
+        }
+
+        footer {
+            padding: 40px;
+            text-align: center;
+            background: #0b0f19;
+            border-top: 1px solid #334155;
+            font-size: 10px;
+            font-weight: 800;
+            color: #475569;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+            .executive-summary, .metrics-board, .roadmap, .forecasts {
+                grid-template-columns: 1fr;
+            }
+            header { flex-direction: column; text-align: center; gap: 30px; }
+            main { padding: 30px; }
+        }
     </style>
 </head>
 <body>
-    <div class="page">
-        <div class="header">
-            <div class="logo-box"><h1>KPI Guard</h1><p>Strategic Intelligence</p></div>
-            <div class="mode-badge">${audit.mode}</div>
+    <div class="container">
+        <div class="report-card">
+            <header>
+                <div class="logo">
+                    <h1>KPI <span>GUARD</span></h1>
+                    <p>Marketing Intelligence Unit</p>
+                </div>
+                <div class="mode-status">${audit.mode} PHASE ACTIVE</div>
+            </header>
+
+            <main>
+                <section class="executive-summary">
+                    <div class="health-score">
+                        <div class="score-circle">
+                            <div class="score-val">${audit.scores.total}</div>
+                        </div>
+                        <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Health Score</div>
+                    </div>
+                    <div class="verdict">
+                        <h2>Strategic Verdict</h2>
+                        <p>${audit.riskReason}</p>
+                        <div class="risk-tag">RISK EXPOSURE: ${audit.risk.toUpperCase()}</div>
+                    </div>
+                </section>
+
+                <div class="section-title">Core Performance Matrix</div>
+                <section class="metrics-board">
+                    <div class="m-card">
+                        <div class="label">ROI Gross</div>
+                        <div class="value">${metrics.roi.toFixed(1)}%</div>
+                    </div>
+                    <div class="m-card">
+                        <div class="label">Efficiency (MER)</div>
+                        <div class="value">${metrics.mer.toFixed(2)}x</div>
+                    </div>
+                    <div class="m-card">
+                        <div class="label">Unit Contribution</div>
+                        <div class="value">${Math.round(metrics.unitGap).toLocaleString()} ${currencySymbol}</div>
+                    </div>
+                    <div class="m-card">
+                        <div class="label">Lead Conversion</div>
+                        <div class="value">${metrics.cr.toFixed(1)}%</div>
+                    </div>
+                </section>
+
+                <div class="section-title">Growth Roadmap & Execution</div>
+                <section class="roadmap">
+                    ${audit.priorityActions.map(action => `
+                        <div class="action-item">
+                            <h3>${action.title}</h3>
+                            <div class="task">${action.action}</div>
+                            <div class="rationale">${action.whyNow}</div>
+                            <div class="kpi-guard">CONTROL KPI: ${action.controlKpi}</div>
+                        </div>
+                    `).join('')}
+                </section>
+
+                <div class="section-title">Diagnostic Insights</div>
+                <section style="margin-bottom: 80px;">
+                    <ul style="list-style: none; padding: 0; margin: 0; display: grid; gap: 15px;">
+                        ${audit.insights.map(i => `
+                            <li style="padding: 20px; background: #1e293b44; border-radius: 16px; border: 1px solid #334155; display: flex; align-items: flex-start; gap: 15px;">
+                                <span style="color: #6366f1;">•</span>
+                                <span style="font-size: 14px; color: #cbd5e1;">${i}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </section>
+
+                <div class="section-title">Scenario Simulations</div>
+                <section class="forecasts">
+                    ${audit.scenarios.map(s => `
+                        <div class="f-card">
+                            <div style="font-size: 8px; font-weight: 900; background: #6366f1; color: #fff; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 10px; text-transform: uppercase;">${s.badgeLabel}</div>
+                            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">${s.title}</div>
+                            <div class="profit">${Math.round(s.profit).toLocaleString()} ${currencySymbol}</div>
+                            <div class="roi-tag">${s.roi}% Expected ROI</div>
+                            <div style="font-size: 11px; font-style: italic; color: #64748b; margin-top: 10px;">"${s.comment}"</div>
+                        </div>
+                    `).join('')}
+                </section>
+            </main>
+
+            <footer>
+                KPI GUARD PROFESSIONAL SYSTEM &bull; GENERATED ON ${date}
+            </footer>
         </div>
-        <div class="content">
-            <div class="verdict">
-                <div style="font-size: 11px; font-weight: 900; color: ${accentColor}; text-transform: uppercase;">Verdict</div>
-                <p style="font-size: 20px; font-weight: 700;">${audit.riskReason}</p>
-                <div class="score-value">${audit.scores.total}</div>
-            </div>
-            <div class="grid">
-                <div class="metric"><div>ROI</div><div style="font-size: 22px; font-weight: 900;">${metrics.roi.toFixed(1)}%</div></div>
-                <div class="metric"><div>MER</div><div style="font-size: 22px; font-weight: 900;">${metrics.mer.toFixed(2)}x</div></div>
-                <div class="metric"><div>Gap</div><div style="font-size: 22px; font-weight: 900;">${Math.round(metrics.unitGap).toLocaleString()}</div></div>
-            </div>
-        </div>
-        <div class="footer">KPI GUARD PROFESSIONAL AUDIT SYSTEM &bull; 2025</div>
     </div>
 </body>
 </html>
@@ -238,9 +577,9 @@ ${audit.scenarios.map(s => `📈 ${s.title} [${s.badgeLabel}]
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `KPI_Guard_Report_${audit.mode}.html`;
+    a.download = `KPI_Guard_Deep_Audit_${audit.mode}.html`;
     a.click();
-    showToast("Отчет в HTML загружен");
+    showToast("Профессиональный отчет загружен");
   };
 
   return (
@@ -340,8 +679,12 @@ ${audit.scenarios.map(s => `📈 ${s.title} [${s.badgeLabel}]
                       </div>
                     </div>
                     <div className="flex gap-2 w-full md:w-auto">
-                      <button onClick={copyFullReport} className="flex-1 md:flex-none p-3 md:p-4 bg-slate-800/60 rounded-xl md:rounded-2xl text-slate-300 flex items-center justify-center border border-white/5 hover:bg-slate-700 transition-colors">
-                        <Copy size={16} className="mr-2" /> <span className="text-[10px] font-black uppercase md:hidden">Копировать всё</span>
+                      <button 
+                        onClick={copyFullReport} 
+                        className="flex-1 md:flex-none p-3 md:p-4 bg-slate-950/60 border-2 border-indigo-500 rounded-full md:rounded-full text-slate-300 flex items-center justify-center hover:bg-indigo-500/10 transition-colors shadow-[0_0_15px_rgba(79,70,229,0.3)] active:scale-90"
+                        title="Копировать отчет"
+                      >
+                        <Copy size={20} />
                       </button>
                       <button onClick={downloadHtml} className="flex-1 md:flex-none p-3 md:p-4 bg-slate-800/60 rounded-xl md:rounded-2xl text-slate-300 flex items-center justify-center border border-white/5 hover:bg-slate-700 transition-colors">
                         <Download size={16} />
