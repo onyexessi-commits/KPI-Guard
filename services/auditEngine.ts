@@ -107,7 +107,9 @@ export function generateAuditReport(
     }
   ];
 
+  // Added mode to comply with the AuditResult interface
   return {
+    mode: profit < 0 ? 'RECOVERY' : 'SCALING',
     risk,
     riskReason,
     insights,

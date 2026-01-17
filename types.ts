@@ -12,11 +12,13 @@ export interface KpiMetrics {
   cpl: number;
   cpa: number;
   revenue: number;
-  profit: number;
-  roi: number;
-  cr: number;
-  beCpa: number;
-  beCpl: number;
+  profit: number; // Marketing Contribution (Gross)
+  roi: number;    // ROI Gross
+  cr: number;     // Conversion Rate
+  mer: number;    // Marketing Efficiency Ratio (Revenue / Budget)
+  unitGap: number; // AOV - CPA
+  beCpa: number;  // Break-even CPA
+  beCpl: number;  // Break-even CPL
 }
 
 export interface Scenario {
@@ -29,19 +31,20 @@ export interface Scenario {
 }
 
 export interface AuditResult {
+  mode: 'RECOVERY' | 'SCALING';
   risk: 'Низкий' | 'Средний' | 'Высокий';
-  riskReason?: string;
+  riskReason: string;
   insights: string[];
   priorityActions: { 
     title: string; 
     action: string; 
     whyNow: string;
-    ifNotDone: string;
+    ifNotDone?: string;
     controlKpi: string;
   }[];
-  lossPoints: { label: string; diff: string; lossValue: number; isCritical: boolean }[];
+  lossPoints?: any[];
+  alternativePlan?: string;
   scenarios: Scenario[];
-  alternativePlan: string;
   scores: {
     total: number;
     economy: number;
